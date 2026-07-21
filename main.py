@@ -1,14 +1,16 @@
 # main.py
 
+import os
 import sys
 from pathlib import Path
 
 from pyspark.sql import SparkSession
 
 
-PROJECT_ROOT = Path(
-    "/Workspace/Users/ai.with.sourabh@gmail.com/weather-precipitation-regression-databricks"
-)
+try:
+    PROJECT_ROOT = Path(__file__).resolve().parent
+except NameError:
+    PROJECT_ROOT = Path(os.getcwd())
 
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.append(str(PROJECT_ROOT))
