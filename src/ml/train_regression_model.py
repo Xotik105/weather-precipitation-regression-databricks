@@ -35,15 +35,21 @@ class PrecipitationRegressionTrainer:
         return train_df, test_df
 
     def build_pipeline(self):
-        log_step("Building Spark ML regression pipeline")
+        log_step("Building Spark ML regression pipeline with engineered features")
 
         feature_columns = [
             "latitude",
             "longitude",
             "elevation",
+            "elevation_km",
+            "absolute_latitude",
             "year",
             "month",
             "day_of_year",
+            "month_sin",
+            "month_cos",
+            "day_of_year_sin",
+            "day_of_year_cos",
         ]
 
         assembler = VectorAssembler(
@@ -109,9 +115,15 @@ class PrecipitationRegressionTrainer:
                 "latitude",
                 "longitude",
                 "elevation",
+                "elevation_km",
+                "absolute_latitude",
                 "year",
                 "month",
                 "day_of_year",
+                "month_sin",
+                "month_cos",
+                "day_of_year_sin",
+                "day_of_year_cos",
                 F.col(TARGET_COLUMN).alias("actual_precipitation"),
                 F.col(PREDICTION_COLUMN).alias("predicted_precipitation"),
             )

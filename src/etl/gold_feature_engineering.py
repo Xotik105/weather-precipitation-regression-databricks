@@ -1,5 +1,7 @@
 # src/etl/gold_feature_engineering.py
 
+from pyspark.sql import functions as F
+
 from src.config import SILVER_TABLE, GOLD_TABLE
 from src.utils.logging_utils import log_step, log_success
 
@@ -14,19 +16,51 @@ class GoldFeatureEngineeringPipeline:
         return self.spark.table(SILVER_TABLE)
 
     def create_features(self, silver_df):
-        log_step("Creating ML-ready Gold feature table")
+        log_step("Creating ML-ready Gold feature table with engineered features")
+
+        pi_value = 3.141592653589793
 
         gold_df = (
             silver_df
+            .withColumn(
+                "month_sin",
+                F.sin(2 * F.lit(pi_value) * F.col("month") / F.lit(12))
+            )
+            .withColumn(
+                "month_cos",
+                F.cos(2 * F.lit(pi_value) * F.col("month") / F.lit(12))
+            )
+            .withColumn(
+                "day_of_year_sin",
+                F.sin(2 * F.lit(pi_value) * F.col("day_of_year") / F.lit(365))
+            )
+            .withColumn(
+                "day_of_year_cos",
+                F.cos(2 * F.lit(pi_value) * F.col("day_of_year") / F.lit(365))
+            )
+            .withColumn(
+                "absolute_latitude",
+                F.abs(F.col("latitude"))
+            )
+            .withColumn(
+                "elevation_km",
+                F.col("elevation") / F.lit(1000)
+            )
             .select(
                 "station",
                 "date",
                 "latitude",
                 "longitude",
                 "elevation",
+                "elevation_km",
+                "absolute_latitude",
                 "year",
                 "month",
                 "day_of_year",
+                "month_sin",
+                "month_cos",
+                "day_of_year_sin",
+                "day_of_year_cos",
                 "precipitation",
             )
         )
