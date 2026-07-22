@@ -79,33 +79,38 @@ class PrecipitationRegressionTrainer:
     def evaluate_model(self, predictions):
         log_step("Evaluating model")
 
-        evaluators = {
-            "rmse": RegressionEvaluator(
-                labelCol=TARGET_COLUMN,
-                predictionCol=PREDICTION_COLUMN,
-                metricName="rmse",
-            ),
-            "mae": RegressionEvaluator(
-                labelCol=TARGET_COLUMN,
-                predictionCol=PREDICTION_COLUMN,
-                metricName="mae",
-            ),
-            "r2": RegressionEvaluator(
-                labelCol=TARGET_COLUMN,
-                predictionCol=PREDICTION_COLUMN,
-                metricName="r2",
-            ),
-        }
+        rmse_evaluator = RegressionEvaluator(
+            labelCol=TARGET_COLUMN,
+            predictionCol=PREDICTION_COLUMN,
+            metricName="rmse",
+        )
+
+        mae_evaluator = RegressionEvaluator(
+            labelCol=TARGET_COLUMN,
+            predictionCol=PREDICTION_COLUMN,
+            metricName="mae",
+        )
+
+        r2_evaluator = RegressionEvaluator(
+            labelCol=TARGET_COLUMN,
+            predictionCol=PREDICTION_COLUMN,
+            metricName="r2",
+        )
 
         metrics = {
-            name: evaluator.evaluate(predictions)
-            for name, evaluator in evaluators.items()
+            "rmse": rmse_evaluator.evaluate(predictions),
+            "mae": mae_evaluator.evaluate(predictions),
+            "r2": r2_evaluator.evaluate(predictions),
         }
 
         return metrics
 
     def write_predictions(self, predictions):
-        log_step(f"Writing prediction table: {PREDICTION_TABLE}")
+        log_step(f"Dropping existing prediction table if it exists: {PREDICTION_TABLE}")
+
+        self.spark.sql(f"DROP TABLE IF EXISTS {PREDICTION_TABLE}")
+
+        log_step(f"Writing prediction table with latest schema: {PREDICTION_TABLE}")
 
         prediction_df = (
             predictions
@@ -135,6 +140,7 @@ class PrecipitationRegressionTrainer:
             prediction_df.write
             .format("delta")
             .mode("overwrite")
+            .option("overwriteSchema", "true")
             .saveAsTable(PREDICTION_TABLE)
         )
 

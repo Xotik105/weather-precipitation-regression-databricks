@@ -68,12 +68,17 @@ class GoldFeatureEngineeringPipeline:
         return gold_df
 
     def write_gold_table(self, gold_df) -> None:
-        log_step(f"Writing Gold table: {GOLD_TABLE}")
+        log_step(f"Dropping existing Gold table if it exists: {GOLD_TABLE}")
+
+        self.spark.sql(f"DROP TABLE IF EXISTS {GOLD_TABLE}")
+
+        log_step(f"Writing Gold table with latest schema: {GOLD_TABLE}")
 
         (
             gold_df.write
             .format("delta")
             .mode("overwrite")
+            .option("overwriteSchema", "true")
             .saveAsTable(GOLD_TABLE)
         )
 
